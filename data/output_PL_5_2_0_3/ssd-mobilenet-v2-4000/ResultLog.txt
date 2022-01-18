@@ -1,0 +1,6 @@
+4.jpg:	40 benur detected	[16.437 s] 	
+2.jpg:	26 benur detected	[4.171 s] 	
+1.jpg:	20 benur detected	[4.119 s] 	
+6.jpg:	12 benur detected	[4.032 s] 	
+3.jpg:	40 benur detected	[3.924 s] 	
+5.jpg:	16 benur detected	[4.013 s] 	

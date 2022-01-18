@@ -1,0 +1,6 @@
+176benur detected	[38.009 s]
+176benur detected	[36.638 s]
+176benur detected	[36.405 s]
+176benur detected	[35.806 s]
+176benur detected	[32.131 s]
+176benur detected	[29.384 s]176benur detected	[28.184 s]176benur detected	[29.788 s]176benur detected	[28.315 s]176benur detected	[30.732 s]176benur detected	[30.208 s]176benur detected	[33.28 s]176benur detected	[30.294 s]176benur detected	[30.203 s]176benur detected	[15.701 s]176benur detected	[15.488 s]176benur detected	[15.279 s]176benur detected	[15.346 s]176benur detected	[15.251 s]
