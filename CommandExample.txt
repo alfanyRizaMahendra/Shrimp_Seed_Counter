@@ -1,0 +1,25 @@
+Command Example
+
+Faster-RCNN-resnet50
+
+sudo python3 detect_objects.py --threshold 0.3 --model_path models/faster-rcnn-resnet50-10000 \
+                         --path_to_labelmap models/shrimp-seed_label_map.pbtxt --images_dir data/test16 --output_directory data/output/FasterRcnn10000 --save_output
+
+sudo python3 detect_objects.py --threshold 0.3 --model_path models/faster-rcnn-resnet50-5000 \
+                         --path_to_labelmap models/shrimp-seed_label_map.pbtxt --images_dir data/test16 --output_directory data/output/FasterRcnn5000 --save_output
+
+SSD MobileNet V2
+
+sudo python3 detect_objects.py --threshold 0.3 --model_path models/ssd-mobilenet-v2-10000 \
+                         --path_to_labelmap models/shrimp-seed_label_map.pbtxt --images_dir data/test16 --output_directory data/output/SSDMobileNet_v2_10000 --save_output
+
+sudo python3 detect_objects.py --threshold 0.3 --model_path models/ssd-mobilenet-v2-5000 \
+                         --path_to_labelmap models/shrimp-seed_label_map.pbtxt --images_dir data/test16 --output_directory data/output/SSDMobileNet_v2_5000 --save_output
+        
+SSD ResNet50 FPN
+
+sudo python3 detect_objects.py --threshold 0.3 --model_path models/ssd-resnet50-fpn-10000 \
+                         --path_to_labelmap models/shrimp-seed_label_map.pbtxt --images_dir data/test16 --output_directory data/output/SSDResNet_10000 --save_output
+
+sudo python3 detect_objects.py --threshold 0.3 --model_path models/ssd-resnet50-fpn-5000 \
+                         --path_to_labelmap models/shrimp-seed_label_map.pbtxt --images_dir data/test16 --output_directory data/output/SSDResNet_5000 --save_output
