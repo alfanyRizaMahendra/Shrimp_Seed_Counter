@@ -13,6 +13,9 @@ import os
 import time
 import RPi.GPIO as GPIO
 
+import tensorflow as tf
+from object_detection.utils import label_map_util
+
 import serial
 ser = serial.Serial ("/dev/ttyS0",
                      baudrate = 38400,
@@ -32,9 +35,6 @@ relay = 21
 relayState = False
 GPIO.setup(relay, GPIO.OUT)
 GPIO.output(relay, relayState)
-
-import tensorflow as tf
-from object_detection.utils import label_map_util
 
 # make white color Backlight as default
 light_default = ["@255$\n", "#255$\n", "&255$\n"]
@@ -120,36 +120,41 @@ contrastValue = 30 #in precentages
 def inputCam(source):
     check = 0
     cam = source
-    if not cam.isOpened():
-        messagebox.showerror("Error !", "Kamera tidak terhubung ! Harap memeriksa koneksi kamera ...")
-        raise Exception("Could not open video device")
-        return 0
+    #if not cam.isOpened():
+    #    messagebox.showerror("Error !", "Kamera tidak terhubung ! Harap memeriksa koneksi kamera ...")
+    #    raise Exception("Could not open video device")
+    #    return 0
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    #cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
     
     ret, frame = cam.read()
-    if ret == True:
-        check = checkBacklight(frame)
-        if(check < 16000):
-            messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
-            cam.release()
-            return 0
+    #if ret == True:
+    #    check = checkBacklight(frame)
+    #    if(check < 16000):
+    #        messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
+    #        cam.release()
+    #        return 0
     return frame
         
 # For preprocessing image
 def make_image_square(filename):
     img = cv2.imread(filename)
     # Size of the image
-    s = 640
+    #s = 640
 
     # Creating a dark square with NUMPY
-    f = np.zeros((s, s, 3), np.uint8)
+    #f = np.zeros((s, s, 3), np.uint8)
 
     # Getting the centering position
-    ax, ay = (s - img.shape[1])//2, (s - img.shape[0])//2
+    #ax, ay = (s - img.shape[1])//2, (s - img.shape[0])//2
 
     # Pasting the 'image' in a centering position
-    f[ay:img.shape[0]+ay, ax:ax+img.shape[1]] = img
+    #f[ay:img.shape[0]+ay, ax:ax+img.shape[1]] = img
+    
+    #resize to 640x640
+    f = cv2.resize(img, (640,640), interpolation = cv2.INTER_AREA)
+    
     cv2.imwrite(filename, f)
     
 def increaseContrast(img, precentage):
@@ -169,21 +174,21 @@ def crop_image():
         image_name = folder_name + str(image_index + 1) + '.jpg'
         
         # ---------------- using simulation image -------------------
-        #img = cv2.imread(image_name)
+        img = cv2.imread(image_name)
+        img = img[74:954,517:1397,:]
         
         # ---------------- using video input -------------------
-        img = inputCam(cv2.VideoCapture(0))
-        
-        cv2.imwrite(image_name, img)
+        #img = inputCam(cv2.VideoCapture(0))
+        #cv2.imwrite(image_name, img)
         
         h, w, c = img.shape
 
-        w_constant = w/3
+        w_constant = w/2
         h_constant = h/2
 
         image_part_index = 0
 
-        for index_w in range(3):
+        for index_w in range(2):
             for index_h in range(2):
                 start_width = int(w_constant * index_w)
                 end_width = int(w_constant * (index_w + 1))
@@ -606,7 +611,7 @@ class Page1(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.videoObj = None
         self.colorSelected = ''
-        self.backColor = ""
+        self.backColor = "0,0,0"
         self.cameraFlag = False
         self.ledFlag = False
         self.count = 0
@@ -730,7 +735,7 @@ class Page1(tk.Frame):
             
     def startRecord(self, event = None):
         self.count += 1
-        videoStream.onStart(self.videoObj, bgColor = self.backColor, recordCount = self.count, recordTime = 1, record = "yes")
+        videoStream.onStart(self.videoObj, bgColor = self.backColor, recordCount = self.count, recordTime = 15, record = "yes")
         
 class videoStream(tk.Frame):
     def __init__(self):
@@ -761,11 +766,12 @@ class videoStream(tk.Frame):
         
         if((self.record == "no") and (cameraFlag == True)):
             self.capWebcam = cv2.VideoCapture(0) 
-            if not self.capWebcam.isOpened():
-                messagebox.showerror("Error !", "Kamera tidak terhubung ! Harap memeriksa koneksi kamera ...")
-                raise Exception("Could not open video device")
+            #if not self.capWebcam.isOpened():
+            #    messagebox.showerror("Error !", "Kamera tidak terhubung ! Harap memeriksa koneksi kamera ...")
+            #    raise Exception("Could not open video device")
             self.capWebcam.set(3, 656)
             self.capWebcam.set(4, 600)
+            #self.capWebcam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
             
             self.stopEvent = threading.Event()
             self.thread = threading.Thread(target=self.videoLoop)
@@ -778,7 +784,9 @@ class videoStream(tk.Frame):
             messagebox.showinfo("notification", self.message)
             self.capWebcam.set(3,1920)
             self.capWebcam.set(4,1080)
-            self.fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+            #self.capWebcam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+            
+            self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
             self.out = cv2.VideoWriter(self.outVideo, self.fourcc, 5.0, (1920,1080))
             self.prev = int(round(time.time() * 1000))
             
@@ -807,13 +815,13 @@ class videoStream(tk.Frame):
                     image = cv2.flip(self.frame, 1)
                     
                     # backlight check wether the led is on or not, light intensity threshold - 30 per pixel
-                    self.check = checkBacklight(self.frame)
-                    if(self.check < 16000):
-                        messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
-                        self.capWebcam.release()
-                        break
+                    #self.check = checkBacklight(self.frame)
+                    #if(self.check < 16000):
+                    #    messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
+                    #    self.capWebcam.release()
+                    #    break
                     
-                    self.check = 0
+                    #self.check = 0
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                     image = Image.fromarray(image)
                     image = ImageTk.PhotoImage(image)
@@ -848,13 +856,13 @@ class videoStream(tk.Frame):
                     image = cv2.flip(self.frame, 1)
                     
                     # backlight check wether the led is on or not, light intensity threshold - 30 per pixel
-                    self.check = checkBacklight(self.frame)
-                    if(self.check < 16000):
-                        messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
-                        self.capWebcam.release()
-                        break
+                    #self.check = checkBacklight(self.frame)
+                    #if(self.check < 16000):
+                    #    messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
+                    #    self.capWebcam.release()
+                    #    break
                     
-                    self.check = 0
+                    #self.check = 0
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                     image = Image.fromarray(image)
                     image = ImageTk.PhotoImage(image)
