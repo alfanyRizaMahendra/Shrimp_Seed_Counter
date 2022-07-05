@@ -4,6 +4,7 @@ from tkinter import ttk
 import tkinter.font as tkFont
 from tkinter import messagebox
 import numpy as np
+import random
 import cv2
 from PIL import Image, ImageTk
 import threading
@@ -115,27 +116,6 @@ class DetectorTF2:
 # ------------------------------------------------------------------------------------------
 # ------------------------------------------- tensor program -------------------------------
 contrastValue = 30 #in precentages
-
-# input frame from camera
-def inputCam(source):
-    check = 0
-    cam = source
-    #if not cam.isOpened():
-    #    messagebox.showerror("Error !", "Kamera tidak terhubung ! Harap memeriksa koneksi kamera ...")
-    #    raise Exception("Could not open video device")
-    #    return 0
-    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    #cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
-    
-    ret, frame = cam.read()
-    #if ret == True:
-    #    check = checkBacklight(frame)
-    #    if(check < 16000):
-    #        messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
-    #        cam.release()
-    #        return 0
-    return frame
         
 # For preprocessing image
 def make_image_square(filename):
@@ -165,24 +145,60 @@ def increaseContrast(img, precentage):
     image = cv2.addWeighted(image, 1, image, contrast, 0)
                     
     stop = time.perf_counter()
-    print("finished adding contrast in " + str(round(stop-start, 2)) + " seconds")
+    print("finish adding contrast in " + str(round(stop-start, 2)) + " seconds")
     return image
 
 def crop_image():
+    check = 0
+    loop = 0
     for image_index in range(2):
         folder_name = 'data/'
         image_name = folder_name + str(image_index + 1) + '.jpg'
         
         # ---------------- using simulation image -------------------
-        img = cv2.imread(image_name)
-        img = img[74:954,517:1397,:]
+        #img = cv2.imread(image_name)
+        #img = img[74:954,517:1397,:] #active this code when using new env
         
         # ---------------- using video input -------------------
-        #img = inputCam(cv2.VideoCapture(0))
-        #cv2.imwrite(image_name, img)
+        cam = cv2.VideoCapture('0,0,0 - 05-April-2022 10:28:33(1).mp4')
+        #cam = cv2.VideoCapture(0)
+        if not cam.isOpened():
+            messagebox.showerror("Error !", "Kamera tidak terhubung ! Harap memeriksa koneksi kamera ...")
+            raise Exception("Could not open video device")
+            
+        cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        #cam.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+        
+        limit = random.randint(10, 50)
+        print(limit)
+        start = time.perf_counter()
+        while cam.isOpened():
+            ret, frame = cam.read() 
+            if (ret == True):
+                loop += 1
+                #check = checkBacklight(frame)
+                #if(check < 16000):
+                #    messagebox.showerror("Error !", "Backlight tidak menyala ! Harap memeriksa sambungan backlight ...")
+                #    cam.release()
+                #    break
+                if loop > limit: # give 6s delay for every image captured
+                    loop = 0
+                    check = 0
+                    img = frame
+                    stop = time.perf_counter()
+                    print("\nfinish taking capture in " + str(round(stop-start, 2)) + " seconds\n")
+                    cam.release()
+                    break
+            else:
+                print("Error capture")
+    
+        img = img[74:954,517:1397,:] #active this code when using new env
+        cv2.imwrite(image_name, img)
         
         h, w, c = img.shape
-
+        
+        # need to change width & height devider when using new env !!!!
         w_constant = w/2
         h_constant = h/2
 
@@ -222,8 +238,8 @@ def WriteFile(output_dir, file_name, content):
     f.write(content)
     f.close()
 
-models = ['faster-rcnn-resnet50-18000']
-threshold_setup = [0.3]
+models = ['faster-rcnn-resnet50-21600']
+threshold_setup = [0.00001]
 test_images_folders = ['1', '2']
 
 # For detection
@@ -581,7 +597,10 @@ class StartPage(tk.Frame):
 
     def tensorflow(self):
         #================ Process ===================#
+        start = time.perf_counter()
         value = calculate()
+        stop = time.perf_counter()
+        print("\n----Total calculation time : " + str(round(stop-start, 2)) + " seconds----\n")
         self.ratarata = value
         #============================================#
         self.stopEvent.set()
@@ -895,5 +914,3 @@ class videoStream(tk.Frame):
             
 app = framecontroller()
 app.mainloop()
-
-
